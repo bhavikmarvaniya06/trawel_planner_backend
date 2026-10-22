@@ -2,7 +2,6 @@ const express = require("express");
 
 const protect = require("../middleware/authMiddleware");
 const adminOnly = require("../middleware/adminMiddleware");
-const { draftDestinationDescription } = require("../controllers/adminAiController");
 const {
     getAdminDashboard,
     deleteUser,
@@ -44,7 +43,6 @@ router.put("/trips/:id", protect, adminOnly, updateTrip);
 router.put("/queries/:id", protect, adminOnly, updateContactQuery);
 router.delete("/queries/:id", protect, adminOnly, deleteContactQuery);
 
-router.post("/destinations/ai-description", protect, adminOnly, draftDestinationDescription);
 router.post("/destinations", protect, adminOnly, createDestination);
 router.put("/destinations/:id", protect, adminOnly, updateDestination);
 router.delete("/destinations/:id", protect, adminOnly, deleteDestination);

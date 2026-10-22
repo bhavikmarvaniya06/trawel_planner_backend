@@ -4,7 +4,6 @@ const ContactQuery = require("../models/ContactQuery");
 const Destination = require("../models/Destination");
 const Trip = require("../models/Trip");
 const TripItinerary = require("../models/TripItinerary");
-const defaultDestinations = require("../data/defaultDestinations.json");
 
 const migrateLegacyQueries = async () => {
     const database = mongoose.connection.db;
@@ -72,64 +71,10 @@ const seedDestinationsFromTrips = async () => {
     }
 };
 
-const seedDefaultDestinationCatalog = async () => {
-    const database = mongoose.connection.db;
-    const migrationId = "default-destination-catalog-v1";
-    if (await database.collection("migrations").findOne({ _id: migrationId })) return;
-
-    const existingDestinations = await Destination.find().lean();
-    const destinationsByName = new Map(
-        existingDestinations.map((destination) => [destination.name.trim().toLowerCase(), destination])
-    );
-
-    for (const entry of defaultDestinations) {
-        const nameKey = entry.name.trim().toLowerCase();
-        const existing = destinationsByName.get(nameKey);
-        const defaults = {
-            aliases: entry.aliases || [],
-            country: entry.country || "",
-            description: entry.description || "",
-            imageUrl: entry.image || "",
-            imageCredit: entry.imageCredit || { label: "", url: "" },
-        };
-
-        if (!existing) {
-            const destination = await Destination.create({
-                name: entry.name.trim(),
-                ...defaults,
-            });
-            destinationsByName.set(nameKey, destination.toObject());
-            continue;
-        }
-
-        const updates = {};
-        Object.entries(defaults).forEach(([field, value]) => {
-            const currentValue = existing[field];
-            if (field === "imageCredit") {
-                if (!currentValue?.label && value.label) updates["imageCredit.label"] = value.label;
-                if (!currentValue?.url && value.url) updates["imageCredit.url"] = value.url;
-            } else if ((!currentValue || (Array.isArray(currentValue) && currentValue.length === 0)) &&
-                (Array.isArray(value) ? value.length > 0 : Boolean(value))) {
-                updates[field] = value;
-            }
-        });
-
-        if (Object.keys(updates).length) {
-            await Destination.updateOne({ _id: existing._id }, { $set: updates });
-        }
-    }
-
-    await database.collection("migrations").insertOne({
-        _id: migrationId,
-        completedAt: new Date(),
-    });
-};
-
 const migrateAdminCollections = async () => {
     await migrateLegacyQueries();
     await migrateEmbeddedItineraries();
     await seedDestinationsFromTrips();
-    await seedDefaultDestinationCatalog();
 };
 
 module.exports = migrateAdminCollections;
