@@ -5,7 +5,6 @@ const Feedback = require("../models/Feedback");
 const Destination = require("../models/Destination");
 const TripItinerary = require("../models/TripItinerary");
 const TripExpense = require("../models/TripExpense");
-const { generateAdminDailyTasks } = require("../services/itineraryService");
 
 const sendUpdateError = (res, error, message) => {
     console.error(`${message} error:`, error.message);
@@ -80,39 +79,6 @@ const getAdminDashboard = async (req, res) => {
         res.status(500).json({
             success: false,
             message: "Unable to load admin dashboard",
-        });
-    }
-};
-
-const getAdminDailyTasks = async (req, res) => {
-    try {
-        const now = new Date();
-        const thirtyDaysAgo = new Date(now.getTime() - 30 * 86400000);
-        const [openQueries, upcomingTrips, overdueTrips, incompleteDestinations, recentLowRatings] = await Promise.all([
-            ContactQuery.countDocuments({ status: { $in: ["open", "in_progress"] } }),
-            Trip.countDocuments({ startDate: { $gte: now }, status: { $in: ["planned", "booked"] } }),
-            Trip.countDocuments({ endDate: { $lt: now }, status: { $in: ["planned", "booked"] } }),
-            Destination.countDocuments({
-                active: true,
-                $or: [{ description: "" }, { imageUrl: "" }],
-            }),
-            Feedback.countDocuments({ rating: { $lte: 3 }, createdAt: { $gte: thirtyDaysAgo } }),
-        ]);
-
-        const dailyPlan = await generateAdminDailyTasks({
-            openQueries,
-            upcomingTrips,
-            overdueTrips,
-            incompleteDestinations,
-            recentLowRatings,
-        });
-
-        res.json({ success: true, ...dailyPlan });
-    } catch (error) {
-        console.error("Generate admin daily tasks error:", error.message);
-        res.status(error.statusCode || 500).json({
-            success: false,
-            message: error.statusCode ? error.message : "Unable to generate admin daily tasks.",
         });
     }
 };
@@ -399,14 +365,26 @@ const deleteContactQuery = async (req, res) => {
 
 const createDestination = async (req, res) => {
     try {
-        const { name, country, region, description, imageUrl, currency, active } = req.body;
+        const { name, aliases, country, region, description, imageUrl, imageCredit, currency, active } = req.body;
         if (typeof name !== "string" || !name.trim() || name.trim().length > 120) {
             return res.status(400).json({ success: false, message: "A valid destination name is required" });
+        }
+        if (!isValidAliases(aliases)) {
+            return res.status(400).json({ success: false, message: "Provide up to 20 valid location aliases" });
+        }
+        const duplicate = await Destination.findOne({
+            name: new RegExp(`^${name.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i"),
+        }).select("_id");
+        if (duplicate) {
+            return res.status(409).json({ success: false, message: "A location with this name already exists" });
         }
         if (imageUrl !== undefined && !isValidImageUrl(imageUrl)) {
             return res.status(400).json({ success: false, message: "Image URL must be a valid HTTP or HTTPS URL" });
         }
-        const destination = await Destination.create({ name: name.trim(), country, region, description, imageUrl, currency, active });
+        if (imageCredit !== undefined && !isValidImageCredit(imageCredit)) {
+            return res.status(400).json({ success: false, message: "Provide valid image attribution details" });
+        }
+        const destination = await Destination.create({ name: name.trim(), aliases, country, region, description, imageUrl, imageCredit, currency, active });
         res.status(201).json({ success: true, destination });
     } catch (error) {
         sendUpdateError(res, error, "Create destination");
@@ -417,11 +395,29 @@ const updateDestination = async (req, res) => {
     try {
         const destination = await Destination.findById(req.params.id);
         if (!destination) return res.status(404).json({ success: false, message: "Destination not found" });
-        const fields = ["name", "country", "region", "description", "imageUrl", "currency", "active"];
+        const fields = ["name", "aliases", "country", "region", "description", "imageUrl", "imageCredit", "currency", "active"];
         const supplied = fields.filter((field) => req.body[field] !== undefined);
         if (!supplied.length) return res.status(400).json({ success: false, message: "At least one destination field is required" });
+        if (req.body.aliases !== undefined && !isValidAliases(req.body.aliases)) {
+            return res.status(400).json({ success: false, message: "Provide up to 20 valid location aliases" });
+        }
+        if (req.body.name !== undefined && (typeof req.body.name !== "string" || !req.body.name.trim() || req.body.name.trim().length > 120)) {
+            return res.status(400).json({ success: false, message: "A valid destination name is required" });
+        }
+        if (req.body.name !== undefined) {
+            const duplicate = await Destination.findOne({
+                _id: { $ne: destination._id },
+                name: new RegExp(`^${req.body.name.trim().replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, "i"),
+            }).select("_id");
+            if (duplicate) {
+                return res.status(409).json({ success: false, message: "A location with this name already exists" });
+            }
+        }
         if (req.body.imageUrl !== undefined && !isValidImageUrl(req.body.imageUrl)) {
             return res.status(400).json({ success: false, message: "Image URL must be a valid HTTP or HTTPS URL" });
+        }
+        if (req.body.imageCredit !== undefined && !isValidImageCredit(req.body.imageCredit)) {
+            return res.status(400).json({ success: false, message: "Provide valid image attribution details" });
         }
         supplied.forEach((field) => { destination[field] = req.body[field]; });
         await destination.save();
@@ -442,6 +438,20 @@ const isValidImageUrl = (value) => {
         return false;
     }
 };
+
+const isValidImageCredit = (value) => (
+    value &&
+    typeof value === "object" &&
+    !Array.isArray(value) &&
+    (value.label === undefined || (typeof value.label === "string" && value.label.length <= 200)) &&
+    (value.url === undefined || (typeof value.url === "string" && (!value.url.trim() || isValidImageUrl(value.url))))
+);
+
+const isValidAliases = (value) => (
+    value === undefined ||
+    (Array.isArray(value) && value.length <= 20 &&
+        value.every((alias) => typeof alias === "string" && alias.trim().length <= 100))
+);
 
 const deleteDestination = async (req, res) => {
     try {
@@ -584,7 +594,6 @@ const deleteTripExpense = async (req, res) => {
 
 module.exports = {
     getAdminDashboard,
-    getAdminDailyTasks,
     deleteUser,
     deleteTrip,
     updateUser,

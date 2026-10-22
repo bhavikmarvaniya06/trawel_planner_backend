@@ -3,7 +3,7 @@ const Destination = require("../models/Destination");
 const getPublicDestinations = async (req, res) => {
     try {
         const destinations = await Destination.find({ active: true })
-            .select("name country region description imageUrl currency")
+            .select("name aliases country region description imageUrl imageCredit currency")
             .sort({ name: 1 })
             .lean();
 

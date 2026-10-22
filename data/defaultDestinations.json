@@ -1,0 +1,532 @@
+[
+  {
+    "name": "Goa",
+    "aliases": [],
+    "country": "India",
+    "region": "",
+    "description": "Beaches, local seafood, Portuguese heritage and a lively coastal culture.",
+    "imageUrl": "https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?auto=format&fit=crop&w=720&q=72",
+    "imageCredit": {
+      "label": "",
+      "url": ""
+    }
+  },
+  {
+    "name": "Dubai",
+    "aliases": [],
+    "country": "UAE",
+    "region": "",
+    "description": "Modern architecture, desert adventures, shopping and waterfront dining.",
+    "imageUrl": "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&w=720&q=72",
+    "imageCredit": {
+      "label": "",
+      "url": ""
+    }
+  },
+  {
+    "name": "Paris",
+    "aliases": [],
+    "country": "France",
+    "region": "",
+    "description": "Iconic landmarks, riverside walks, art museums and neighborhood cafes.",
+    "imageUrl": "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?auto=format&fit=crop&w=720&q=72",
+    "imageCredit": {
+      "label": "",
+      "url": ""
+    }
+  },
+  {
+    "name": "Bali",
+    "aliases": [],
+    "country": "Indonesia",
+    "region": "",
+    "description": "Island beaches, temples, rice terraces and volcanic landscapes.",
+    "imageUrl": "https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=720&q=72",
+    "imageCredit": {
+      "label": "",
+      "url": ""
+    }
+  },
+  {
+    "name": "London",
+    "aliases": [],
+    "country": "United Kingdom",
+    "region": "",
+    "description": "Historic sights, world-class museums, parks and lively markets.",
+    "imageUrl": "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?auto=format&fit=crop&w=720&q=72",
+    "imageCredit": {
+      "label": "",
+      "url": ""
+    }
+  },
+  {
+    "name": "New York",
+    "aliases": [],
+    "country": "USA",
+    "region": "",
+    "description": "A city of famous skyline views, distinct neighborhoods and late nights.",
+    "imageUrl": "https://images.unsplash.com/photo-1618243539083-50d8840e122f?auto=format&fit=crop&w=720&q=72",
+    "imageCredit": {
+      "label": "",
+      "url": ""
+    }
+  },
+  {
+    "name": "Mussoorie",
+    "aliases": [
+      "Musoorie"
+    ],
+    "country": "India",
+    "region": "",
+    "description": "Himalayan viewpoints, forest trails and old hill-station streets.",
+    "imageUrl": "https://images.unsplash.com/photo-1597074866923-dc0589150358?auto=format&fit=crop&w=720&q=72",
+    "imageCredit": {
+      "label": "",
+      "url": ""
+    }
+  },
+  {
+    "name": "Black Forest",
+    "aliases": [],
+    "country": "Germany",
+    "region": "",
+    "description": "Woodland hikes, traditional villages and scenic mountain roads.",
+    "imageUrl": "https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=720&q=72",
+    "imageCredit": {
+      "label": "",
+      "url": ""
+    }
+  },
+  {
+    "name": "Tokyo",
+    "aliases": [],
+    "country": "Japan",
+    "region": "",
+    "description": "Neon-lit districts, quiet shrines, creative food and easy rail travel.",
+    "imageUrl": "https://images.unsplash.com/photo-1784322127965-2f5744af4fd9?auto=format&fit=crop&w=720&q=72",
+    "imageCredit": {
+      "label": "",
+      "url": ""
+    }
+  },
+  {
+    "name": "Jaipur",
+    "aliases": [],
+    "country": "India",
+    "region": "",
+    "description": "Pink-hued architecture, historic forts, craft markets and Rajasthani food.",
+    "imageUrl": "https://images.unsplash.com/photo-1599661046827-dacff0c0f09a?auto=format&fit=crop&w=720&q=72",
+    "imageCredit": {
+      "label": "",
+      "url": ""
+    }
+  },
+  {
+    "name": "Agra",
+    "aliases": [],
+    "country": "India",
+    "region": "",
+    "description": "Mughal-era landmarks, gardens and the Taj Mahal at sunrise.",
+    "imageUrl": "https://images.unsplash.com/photo-1564507592333-c60657eea523?auto=format&fit=crop&w=720&q=72",
+    "imageCredit": {
+      "label": "",
+      "url": ""
+    }
+  },
+  {
+    "name": "Manali",
+    "aliases": [],
+    "country": "India",
+    "region": "",
+    "description": "Mountain scenery, riverside walks and high-altitude day trips.",
+    "imageUrl": "https://images.unsplash.com/photo-1626621341517-bbf3d9990a23?auto=format&fit=crop&w=720&q=72",
+    "imageCredit": {
+      "label": "",
+      "url": ""
+    }
+  },
+  {
+    "name": "Kerala",
+    "aliases": [],
+    "country": "India",
+    "region": "",
+    "description": "Backwaters, tea-growing hills, wildlife and a relaxed coastal pace.",
+    "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/bd/Kerala_backwaters%2C_Houseboat%2C_Cruise%2C_India.jpg/960px-Kerala_backwaters%2C_Houseboat%2C_Cruise%2C_India.jpg",
+    "imageCredit": {
+      "label": "Vyacheslav Argenberg · CC BY 4.0",
+      "url": "https://commons.wikimedia.org/wiki/File:Kerala_backwaters,_Houseboat,_Cruise,_India.jpg"
+    }
+  },
+  {
+    "name": "Udaipur",
+    "aliases": [],
+    "country": "India",
+    "region": "",
+    "description": "Lakefront palaces, old-city lanes and sunset boat rides.",
+    "imageUrl": "https://images.unsplash.com/photo-1695956353120-54ce5e91632b?auto=format&fit=crop&w=720&q=72",
+    "imageCredit": {
+      "label": "",
+      "url": ""
+    }
+  },
+  {
+    "name": "Varanasi",
+    "aliases": [],
+    "country": "India",
+    "region": "",
+    "description": "Riverside ghats, historic alleys and a deeply rooted cultural life.",
+    "imageUrl": "https://images.unsplash.com/photo-1561361513-2d000a50f0dc?auto=format&fit=crop&w=720&q=72",
+    "imageCredit": {
+      "label": "",
+      "url": ""
+    }
+  },
+  {
+    "name": "Singapore",
+    "aliases": [],
+    "country": "Singapore",
+    "region": "",
+    "description": "Garden architecture, hawker centers and an easy-to-navigate city.",
+    "imageUrl": "https://images.unsplash.com/photo-1525625293386-3f8f99389edd?auto=format&fit=crop&w=720&q=72",
+    "imageCredit": {
+      "label": "",
+      "url": ""
+    }
+  },
+  {
+    "name": "Rome",
+    "aliases": [],
+    "country": "Italy",
+    "region": "",
+    "description": "Ancient landmarks, neighborhood trattorias and layers of living history.",
+    "imageUrl": "https://images.unsplash.com/photo-1552832230-c0197dd311b5?auto=format&fit=crop&w=720&q=72",
+    "imageCredit": {
+      "label": "",
+      "url": ""
+    }
+  },
+  {
+    "name": "Kyoto",
+    "aliases": [],
+    "country": "Japan",
+    "region": "",
+    "description": "Temple gardens, traditional streets and seasonal scenery.",
+    "imageUrl": "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=720&q=72",
+    "imageCredit": {
+      "label": "",
+      "url": ""
+    }
+  },
+  {
+    "name": "Istanbul",
+    "aliases": [],
+    "country": "Türkiye",
+    "region": "",
+    "description": "Historic mosques, ferry crossings, bazaars and layered food culture.",
+    "imageUrl": "https://images.unsplash.com/photo-1524231757912-21f4fe3a7200?auto=format&fit=crop&w=720&q=72",
+    "imageCredit": {
+      "label": "",
+      "url": ""
+    }
+  },
+  {
+    "name": "Bangkok",
+    "aliases": [],
+    "country": "Thailand",
+    "region": "",
+    "description": "Temple visits, street food, river ferries and energetic night markets.",
+    "imageUrl": "https://images.unsplash.com/photo-1508009603885-50cf7c579365?auto=format&fit=crop&w=720&q=72",
+    "imageCredit": {
+      "label": "",
+      "url": ""
+    }
+  },
+  {
+    "name": "Amsterdam",
+    "aliases": [],
+    "country": "Netherlands",
+    "region": "",
+    "description": "Canal-side walks, galleries, cycling routes and independent cafes.",
+    "imageUrl": "https://images.unsplash.com/photo-1512470876302-972faa2aa9a4?auto=format&fit=crop&w=720&q=72",
+    "imageCredit": {
+      "label": "",
+      "url": ""
+    }
+  },
+  {
+    "name": "Barcelona",
+    "aliases": [],
+    "country": "Spain",
+    "region": "",
+    "description": "Distinctive architecture, Mediterranean beaches and late dining.",
+    "imageUrl": "https://images.unsplash.com/photo-1583422409516-2895a77efded?auto=format&fit=crop&w=720&q=72",
+    "imageCredit": {
+      "label": "",
+      "url": ""
+    }
+  },
+  {
+    "name": "Santorini",
+    "aliases": [],
+    "country": "Greece",
+    "region": "",
+    "description": "Cliffside villages, caldera views and quiet island coves.",
+    "imageUrl": "https://images.unsplash.com/photo-1533105079780-92b9be482077?auto=format&fit=crop&w=720&q=72",
+    "imageCredit": {
+      "label": "",
+      "url": ""
+    }
+  },
+  {
+    "name": "Maldives",
+    "aliases": [],
+    "country": "Maldives",
+    "region": "",
+    "description": "Atolls, coral reefs and calm Indian Ocean waters.",
+    "imageUrl": "https://images.unsplash.com/photo-1514282401047-d79a71a590e8?auto=format&fit=crop&w=720&q=72",
+    "imageCredit": {
+      "label": "",
+      "url": ""
+    }
+  },
+  {
+    "name": "Sydney",
+    "aliases": [],
+    "country": "Australia",
+    "region": "",
+    "description": "Harbor landmarks, coastal walks and a relaxed beach-city rhythm.",
+    "imageUrl": "https://images.unsplash.com/photo-1506973035872-a4ec16b8e8d9?auto=format&fit=crop&w=720&q=72",
+    "imageCredit": {
+      "label": "",
+      "url": ""
+    }
+  },
+  {
+    "name": "Cape Town",
+    "aliases": [],
+    "country": "South Africa",
+    "region": "",
+    "description": "Mountain trails, ocean viewpoints, gardens and nearby vineyards.",
+    "imageUrl": "https://images.unsplash.com/photo-1580060839134-75a5edca2e99?auto=format&fit=crop&w=720&q=72",
+    "imageCredit": {
+      "label": "",
+      "url": ""
+    }
+  },
+  {
+    "name": "Vancouver",
+    "aliases": [],
+    "country": "Canada",
+    "region": "",
+    "description": "A walkable waterfront, mountain backdrops and green city parks.",
+    "imageUrl": "https://images.unsplash.com/photo-1559511260-66a654ae982a?auto=format&fit=crop&w=720&q=72",
+    "imageCredit": {
+      "label": "",
+      "url": ""
+    }
+  },
+  {
+    "name": "Cairo",
+    "aliases": [],
+    "country": "Egypt",
+    "region": "",
+    "description": "Ancient monuments, museums and the lively streets of a vast city.",
+    "imageUrl": "https://images.unsplash.com/photo-1572252009286-268acec5ca0a?auto=format&fit=crop&w=720&q=72",
+    "imageCredit": {
+      "label": "",
+      "url": ""
+    }
+  },
+  {
+    "name": "Machu Picchu",
+    "aliases": [],
+    "country": "Peru",
+    "region": "",
+    "description": "Mountain scenery and a remarkable archaeological site in the Andes.",
+    "imageUrl": "https://images.unsplash.com/photo-1526392060635-9d6019884377?auto=format&fit=crop&w=720&q=72",
+    "imageCredit": {
+      "label": "",
+      "url": ""
+    }
+  },
+  {
+    "name": "Prague",
+    "aliases": [],
+    "country": "Czechia",
+    "region": "",
+    "description": "A compact old town, riverside views and striking historic architecture.",
+    "imageUrl": "https://images.unsplash.com/photo-1519677100203-a0e668c92439?auto=format&fit=crop&w=720&q=72",
+    "imageCredit": {
+      "label": "",
+      "url": ""
+    }
+  },
+  {
+    "name": "Lisbon",
+    "aliases": [],
+    "country": "Portugal",
+    "region": "",
+    "description": "Hillside viewpoints, tiled streets, coastal day trips and vibrant food.",
+    "imageUrl": "https://images.unsplash.com/photo-1555881400-74d7acaacd8b?auto=format&fit=crop&w=720&q=72",
+    "imageCredit": {
+      "label": "",
+      "url": ""
+    }
+  },
+  {
+    "name": "Florence",
+    "aliases": [],
+    "country": "Italy",
+    "region": "",
+    "description": "Renaissance art, walkable piazzas and Tuscan food and wine.",
+    "imageUrl": "https://images.unsplash.com/photo-1581951756710-084ff9f7b0ca?auto=format&fit=crop&w=720&q=72",
+    "imageCredit": {
+      "label": "",
+      "url": ""
+    }
+  },
+  {
+    "name": "Venice",
+    "aliases": [],
+    "country": "Italy",
+    "region": "",
+    "description": "Canals, historic bridges, quiet squares and lagoon islands.",
+    "imageUrl": "https://images.unsplash.com/photo-1514890547357-a9ee288728e0?auto=format&fit=crop&w=720&q=72",
+    "imageCredit": {
+      "label": "",
+      "url": ""
+    }
+  },
+  {
+    "name": "Reykjavik",
+    "aliases": [],
+    "country": "Iceland",
+    "region": "",
+    "description": "Colorful streets, geothermal pools and easy access to dramatic landscapes.",
+    "imageUrl": "https://images.unsplash.com/photo-1504829857797-ddff29c27927?auto=format&fit=crop&w=720&q=72",
+    "imageCredit": {
+      "label": "",
+      "url": ""
+    }
+  },
+  {
+    "name": "Queenstown",
+    "aliases": [],
+    "country": "New Zealand",
+    "region": "",
+    "description": "Alpine lake views, scenic trails and outdoor adventures.",
+    "imageUrl": "https://images.unsplash.com/photo-1507699622108-4be3abd695ad?auto=format&fit=crop&w=720&q=72",
+    "imageCredit": {
+      "label": "",
+      "url": ""
+    }
+  },
+  {
+    "name": "Seoul",
+    "aliases": [],
+    "country": "South Korea",
+    "region": "",
+    "description": "Palaces, contemporary neighborhoods, mountain walks and late-night food.",
+    "imageUrl": "https://images.unsplash.com/photo-1517154421773-0529f29ea451?auto=format&fit=crop&w=720&q=72",
+    "imageCredit": {
+      "label": "",
+      "url": ""
+    }
+  },
+  {
+    "name": "Hanoi",
+    "aliases": [],
+    "country": "Vietnam",
+    "region": "",
+    "description": "Old-quarter streets, lakeside walks and celebrated Vietnamese cuisine.",
+    "imageUrl": "https://images.unsplash.com/photo-1509030450996-dd1a26dda07a?auto=format&fit=crop&w=720&q=72",
+    "imageCredit": {
+      "label": "",
+      "url": ""
+    }
+  },
+  {
+    "name": "Kuala Lumpur",
+    "aliases": [],
+    "country": "Malaysia",
+    "region": "",
+    "description": "Skyline landmarks, lively markets and a rich mix of local cuisines.",
+    "imageUrl": "https://images.unsplash.com/photo-1596422846543-75c6fc197f07?auto=format&fit=crop&w=720&q=72",
+    "imageCredit": {
+      "label": "",
+      "url": ""
+    }
+  },
+  {
+    "name": "Mexico City",
+    "aliases": [],
+    "country": "Mexico",
+    "region": "",
+    "description": "World-class museums, historic neighborhoods and an exciting food scene.",
+    "imageUrl": "https://images.unsplash.com/photo-1518105779142-d975f22f1b0a?auto=format&fit=crop&w=720&q=72",
+    "imageCredit": {
+      "label": "",
+      "url": ""
+    }
+  },
+  {
+    "name": "Rio de Janeiro",
+    "aliases": [],
+    "country": "Brazil",
+    "region": "",
+    "description": "Mountain-backed beaches, samba culture and sweeping city viewpoints.",
+    "imageUrl": "https://images.unsplash.com/photo-1483729558449-99ef09a8c325?auto=format&fit=crop&w=720&q=72",
+    "imageCredit": {
+      "label": "",
+      "url": ""
+    }
+  },
+  {
+    "name": "Buenos Aires",
+    "aliases": [],
+    "country": "Argentina",
+    "region": "",
+    "description": "Grand boulevards, neighborhood cafes, tango and late-night dining.",
+    "imageUrl": "https://images.unsplash.com/photo-1612294037637-ec328d0e075e?auto=format&fit=crop&w=720&q=72",
+    "imageCredit": {
+      "label": "",
+      "url": ""
+    }
+  },
+  {
+    "name": "Marrakech",
+    "aliases": [],
+    "country": "Morocco",
+    "region": "",
+    "description": "Medina lanes, garden courtyards, souks and Atlas Mountain day trips.",
+    "imageUrl": "https://images.unsplash.com/photo-1597212618440-806262de4f6b?auto=format&fit=crop&w=720&q=72",
+    "imageCredit": {
+      "label": "",
+      "url": ""
+    }
+  },
+  {
+    "name": "Zanzibar",
+    "aliases": [],
+    "country": "Tanzania",
+    "region": "",
+    "description": "Indian Ocean beaches, historic Stone Town and spice island tours.",
+    "imageUrl": "https://images.unsplash.com/photo-1510414842594-a61c69b5ae57?auto=format&fit=crop&w=720&q=72",
+    "imageCredit": {
+      "label": "",
+      "url": ""
+    }
+  },
+  {
+    "name": "Banff",
+    "aliases": [],
+    "country": "Canada",
+    "region": "",
+    "description": "Turquoise alpine lakes, mountain trails and wildlife-rich parkland.",
+    "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2f/Banff_National_Park_Lake_May_2024.jpg/960px-Banff_National_Park_Lake_May_2024.jpg",
+    "imageCredit": {
+      "label": "Gaya.psd · CC BY-SA 4.0",
+      "url": "https://commons.wikimedia.org/wiki/File:Banff_National_Park_Lake_May_2024.jpg"
+    }
+  }
+]
