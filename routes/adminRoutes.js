@@ -4,6 +4,7 @@ const protect = require("../middleware/authMiddleware");
 const adminOnly = require("../middleware/adminMiddleware");
 const {
     getAdminDashboard,
+    getAdminDailyTasks,
     deleteUser,
     deleteTrip,
     updateUser,
@@ -33,6 +34,7 @@ router.get(
     adminOnly,
     getAdminDashboard
 );
+router.post("/daily-tasks", protect, adminOnly, getAdminDailyTasks);
 
 router.delete("/users/:id", protect, adminOnly, deleteUser);
 router.put("/users/:id", protect, adminOnly, updateUser);

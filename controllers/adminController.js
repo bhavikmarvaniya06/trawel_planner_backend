@@ -5,6 +5,7 @@ const Feedback = require("../models/Feedback");
 const Destination = require("../models/Destination");
 const TripItinerary = require("../models/TripItinerary");
 const TripExpense = require("../models/TripExpense");
+const { generateAdminDailyTasks } = require("../services/itineraryService");
 
 const sendUpdateError = (res, error, message) => {
     console.error(`${message} error:`, error.message);
@@ -79,6 +80,39 @@ const getAdminDashboard = async (req, res) => {
         res.status(500).json({
             success: false,
             message: "Unable to load admin dashboard",
+        });
+    }
+};
+
+const getAdminDailyTasks = async (req, res) => {
+    try {
+        const now = new Date();
+        const thirtyDaysAgo = new Date(now.getTime() - 30 * 86400000);
+        const [openQueries, upcomingTrips, overdueTrips, incompleteDestinations, recentLowRatings] = await Promise.all([
+            ContactQuery.countDocuments({ status: { $in: ["open", "in_progress"] } }),
+            Trip.countDocuments({ startDate: { $gte: now }, status: { $in: ["planned", "booked"] } }),
+            Trip.countDocuments({ endDate: { $lt: now }, status: { $in: ["planned", "booked"] } }),
+            Destination.countDocuments({
+                active: true,
+                $or: [{ description: "" }, { imageUrl: "" }],
+            }),
+            Feedback.countDocuments({ rating: { $lte: 3 }, createdAt: { $gte: thirtyDaysAgo } }),
+        ]);
+
+        const dailyPlan = await generateAdminDailyTasks({
+            openQueries,
+            upcomingTrips,
+            overdueTrips,
+            incompleteDestinations,
+            recentLowRatings,
+        });
+
+        res.json({ success: true, ...dailyPlan });
+    } catch (error) {
+        console.error("Generate admin daily tasks error:", error.message);
+        res.status(error.statusCode || 500).json({
+            success: false,
+            message: error.statusCode ? error.message : "Unable to generate admin daily tasks.",
         });
     }
 };
@@ -550,6 +584,7 @@ const deleteTripExpense = async (req, res) => {
 
 module.exports = {
     getAdminDashboard,
+    getAdminDailyTasks,
     deleteUser,
     deleteTrip,
     updateUser,
