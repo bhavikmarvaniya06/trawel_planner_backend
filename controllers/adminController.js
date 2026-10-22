@@ -365,11 +365,14 @@ const deleteContactQuery = async (req, res) => {
 
 const createDestination = async (req, res) => {
     try {
-        const { name, country, region, description, currency, active } = req.body;
+        const { name, country, region, description, imageUrl, currency, active } = req.body;
         if (typeof name !== "string" || !name.trim() || name.trim().length > 120) {
             return res.status(400).json({ success: false, message: "A valid destination name is required" });
         }
-        const destination = await Destination.create({ name: name.trim(), country, region, description, currency, active });
+        if (imageUrl !== undefined && !isValidImageUrl(imageUrl)) {
+            return res.status(400).json({ success: false, message: "Image URL must be a valid HTTP or HTTPS URL" });
+        }
+        const destination = await Destination.create({ name: name.trim(), country, region, description, imageUrl, currency, active });
         res.status(201).json({ success: true, destination });
     } catch (error) {
         sendUpdateError(res, error, "Create destination");
@@ -380,14 +383,29 @@ const updateDestination = async (req, res) => {
     try {
         const destination = await Destination.findById(req.params.id);
         if (!destination) return res.status(404).json({ success: false, message: "Destination not found" });
-        const fields = ["name", "country", "region", "description", "currency", "active"];
+        const fields = ["name", "country", "region", "description", "imageUrl", "currency", "active"];
         const supplied = fields.filter((field) => req.body[field] !== undefined);
         if (!supplied.length) return res.status(400).json({ success: false, message: "At least one destination field is required" });
+        if (req.body.imageUrl !== undefined && !isValidImageUrl(req.body.imageUrl)) {
+            return res.status(400).json({ success: false, message: "Image URL must be a valid HTTP or HTTPS URL" });
+        }
         supplied.forEach((field) => { destination[field] = req.body[field]; });
         await destination.save();
         res.json({ success: true, destination });
     } catch (error) {
         sendUpdateError(res, error, "Update destination");
+    }
+};
+
+const isValidImageUrl = (value) => {
+    if (typeof value !== "string" || value.length > 2048) return false;
+    if (!value.trim()) return true;
+
+    try {
+        const url = new URL(value.trim());
+        return url.protocol === "http:" || url.protocol === "https:";
+    } catch {
+        return false;
     }
 };
 

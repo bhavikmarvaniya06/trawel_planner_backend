@@ -19,6 +19,7 @@ const tripRoutes = require("./routes/tripRoutes");
 const contactRoutes = require("./routes/contactRoutes");
 const feedbackRoutes = require("./routes/feedbackRoutes");
 const adminRoutes = require("./routes/adminRoutes");
+const destinationRoutes = require("./routes/destinationRoutes");
 
 const app = express();
 
@@ -50,6 +51,8 @@ const bootstrap = async () => {
         app.use("/api/contact", contactRoutes);
 
         app.use("/api/feedback", feedbackRoutes);
+
+        app.use("/api/destinations", destinationRoutes);
 
         app.use("/api/admin", adminRoutes);
 

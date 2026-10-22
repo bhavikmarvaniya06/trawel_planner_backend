@@ -3,6 +3,7 @@ const express = require("express");
 const {
     getTripSuggestions,
     createTrip,
+    emailTripPdf,
     getMyTrips,
     getTripById,
 } = require("../controllers/tripController");
@@ -15,6 +16,7 @@ const router = express.Router();
 // Create trip
 router.post("/suggestions", protect, getTripSuggestions);
 router.post("/", protect, createTrip);
+router.post("/:id/email", protect, emailTripPdf);
 
 
 // Get my trips

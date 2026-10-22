@@ -6,6 +6,7 @@ const destinationSchema = new mongoose.Schema(
         country: { type: String, trim: true, maxlength: 100, default: "" },
         region: { type: String, trim: true, maxlength: 100, default: "" },
         description: { type: String, trim: true, maxlength: 2000, default: "" },
+        imageUrl: { type: String, trim: true, maxlength: 2048, default: "" },
         currency: { type: String, uppercase: true, trim: true, match: /^[A-Z]{3}$/, default: "USD" },
         active: { type: Boolean, default: true },
     },

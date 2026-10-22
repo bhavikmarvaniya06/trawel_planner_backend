@@ -1,9 +1,24 @@
 const Trip = require("../models/Trip");
 const TripItinerary = require("../models/TripItinerary");
+const User = require("../models/User");
+const { sendTripConfirmationEmail } = require("../services/tripEmailService");
 const {
     generateItinerary,
     generateTripSuggestions,
 } = require("../services/itineraryService");
+
+const getTripEmailErrorMessage = (error) => {
+    if (error.code === "EAUTH") {
+        return "Trip saved, but the email provider rejected the sender credentials.";
+    }
+    if (["ECONNECTION", "ESOCKET", "ETIMEDOUT", "EDNS", "EAI_AGAIN"].includes(error.code)) {
+        return "Trip saved, but the email service could not be reached. Check backend network and DNS.";
+    }
+    if (error.responseCode === 550 || error.code === "EENVELOPE") {
+        return "Trip saved, but the email provider rejected the account email address.";
+    }
+    return "Trip saved, but the PDF email could not be sent. Check the backend email configuration.";
+};
 
 const getTripSuggestions = async (req, res) => {
     try {
@@ -139,10 +154,32 @@ const createTrip = async (req, res) => {
             throw error;
         }
 
+        let emailSent = false;
+        let emailMessage = "Trip saved, but its PDF could not be sent to your email.";
+
+        try {
+            const user = await User.findById(req.userId).select("name email");
+            if (user?.email) {
+                await sendTripConfirmationEmail(user, trip);
+                emailSent = true;
+                emailMessage = "Trip PDF sent to your login email.";
+            } else {
+                emailMessage = "Trip saved, but no email is linked to this account.";
+            }
+        } catch (emailError) {
+            console.error("Trip confirmation email failed:", JSON.stringify({
+                code: emailError.code,
+                responseCode: emailError.responseCode,
+                command: emailError.command,
+            }));
+            emailMessage = getTripEmailErrorMessage(emailError);
+        }
 
         res.status(201).json({
             success: true,
             message: "Trip created successfully",
+            emailSent,
+            emailMessage,
             trip,
         });
 
@@ -153,6 +190,46 @@ const createTrip = async (req, res) => {
         res.status(error.statusCode || 500).json({
             success: false,
             message: error.statusCode ? error.message : "Server error",
+        });
+    }
+};
+
+const emailTripPdf = async (req, res) => {
+    try {
+        const trip = await Trip.findOne({
+            _id: req.params.id,
+            user: req.userId,
+        });
+
+        if (!trip) {
+            return res.status(404).json({
+                success: false,
+                message: "Trip not found",
+            });
+        }
+
+        const user = await User.findById(req.userId).select("name email");
+        if (!user?.email) {
+            return res.status(400).json({
+                success: false,
+                message: "No email is linked to this account.",
+            });
+        }
+
+        await sendTripConfirmationEmail(user, trip);
+        return res.status(200).json({
+            success: true,
+            message: `Trip PDF sent to ${user.email}.`,
+        });
+    } catch (error) {
+        console.error("Trip PDF resend failed:", JSON.stringify({
+            code: error.code,
+            responseCode: error.responseCode,
+            command: error.command,
+        }));
+        return res.status(503).json({
+            success: false,
+            message: getTripEmailErrorMessage(error),
         });
     }
 };
@@ -221,6 +298,7 @@ const getTripById = async (req, res) => {
 module.exports = {
     getTripSuggestions,
     createTrip,
+    emailTripPdf,
     getMyTrips,
     getTripById,
 };
