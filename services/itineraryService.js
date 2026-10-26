@@ -13,7 +13,7 @@ const getGeminiClient = () => {
     return new GoogleGenAI({ apiKey });
 };
 
-const getMapsUrl = (location) => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location)}`;
+const getMapsUrl = (location) => `https://www.openstreetmap.org/search?query=${encodeURIComponent(location)}`;
 
 const callGemini = async (prompt, schema) => {
     const ai = getGeminiClient();

@@ -1,7 +1,16 @@
 const { generateItinerary } = require("../services/itineraryService");
+const { getTripAvailability } = require("../services/paymentService");
 
 const planTrip = async (req, res) => {
     try {
+        const availability = await getTripAvailability(req.userId);
+        if (!availability.freeTripAvailable && availability.tripCredits < 1) {
+            return res.status(402).json({
+                success: false,
+                message: "Your free AI trip has been used. Buy a trip package from your dashboard to create another trip.",
+                ...availability,
+            });
+        }
         const {
             destination,
             startDate,

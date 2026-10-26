@@ -18,19 +18,46 @@ const userSchema = new mongoose.Schema(
 
         password: {
             type: String,
-            required: true,
             minlength: 6,
+        },
+
+        googleId: {
+            type: String,
+            unique: true,
+            sparse: true,
         },
 
         profileImage: {
             type: String,
             default: "",
         },
+        savedPlaces: {
+            type: [String],
+            default: [],
+        },
+        interests: {
+            type: [String],
+            default: [],
+        },
         role: {
-    type: String,
-    enum: ["user", "admin"],
-    default: "user"
-},
+            type: String,
+            enum: ["user", "admin"],
+            default: "user",
+        },
+        freeTripUsed: {
+            type: Boolean,
+            default: false,
+        },
+        tripCredits: {
+            type: Number,
+            min: 0,
+            default: 0,
+        },
+        processedPaymentIds: {
+            type: [mongoose.Schema.Types.ObjectId],
+            default: [],
+            select: false,
+        },
     },
     {
         timestamps: true,

@@ -1,5 +1,6 @@
 const dns = require("dns");
 const path = require("path");
+const http = require("http");
 
 dns.setServers(["8.8.8.8", "1.1.1.1"]);
 
@@ -20,6 +21,13 @@ const contactRoutes = require("./routes/contactRoutes");
 const feedbackRoutes = require("./routes/feedbackRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const destinationRoutes = require("./routes/destinationRoutes");
+const paymentRoutes = require("./routes/paymentRoutes");
+const notificationRoutes = require("./routes/notificationRoutes");
+const cron = require("node-cron");
+const { checkTripWeather } = require("./services/weatherMonitor");
+const recommendationRoutes = require("./routes/recommendationRoutes");
+const { Server } = require("socket.io");
+const configureTripSockets = require("./services/tripSocket");
 
 const app = express();
 
@@ -54,6 +62,12 @@ const bootstrap = async () => {
 
         app.use("/api/destinations", destinationRoutes);
 
+        app.use("/api/payments", paymentRoutes);
+
+        app.use("/api/notifications", notificationRoutes);
+
+        app.use("/api/recommendations", recommendationRoutes);
+
         app.use("/api/admin", adminRoutes);
 
 
@@ -76,8 +90,23 @@ const bootstrap = async () => {
         // ============================
 
         const PORT = process.env.PORT || 5001;
+        const server = http.createServer(app);
+        const io = new Server(server, {
+            cors: { origin: true },
+        });
+        configureTripSockets(io);
+        app.set("io", io);
 
-        app.listen(PORT, () => {
+        cron.schedule("0 */6 * * *", () => {
+            checkTripWeather().catch((error) => {
+                console.error("Scheduled weather check failed:", error.message);
+            });
+        });
+        checkTripWeather().catch((error) => {
+            console.error("Initial weather check failed:", error.message);
+        });
+
+        server.listen(PORT, () => {
 
             console.log(`Server running on port ${PORT}`);
 

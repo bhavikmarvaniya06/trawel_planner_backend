@@ -3,6 +3,7 @@ const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
 const User = require("../models/User");
+const googleAuthService = require("../services/googleAuthService");
 
 const otpStore = new Map();
 const OTP_TTL_MS = 5 * 60 * 1000;
@@ -56,6 +57,26 @@ const sendOtpEmail = async (toEmail, otp) => {
     if (delivery.rejected.includes(toEmail) || delivery.accepted.length === 0) {
         throw new Error("SMTP server did not accept the OTP recipient.");
     }
+};
+
+const sendGoogleLoginResponse = (res, user) => {
+    const token = jwt.sign(
+        { userId: user._id },
+        jwtSecret,
+        { expiresIn: process.env.JWT_EXPIRES_IN || "7d" }
+    );
+
+    return res.status(200).json({
+        success: true,
+        message: "Google login successful",
+        token,
+        user: {
+            id: user._id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+        },
+    });
 };
 
 
@@ -144,7 +165,7 @@ const loginUser = async (req, res) => {
         // Find user
         const user = await User.findOne({ email: normalizedEmail });
 
-        if (!user) {
+        if (!user || !user.password) {
             return res.status(401).json({
                 success: false,
                 message: "Invalid email or password",
@@ -200,6 +221,130 @@ const loginUser = async (req, res) => {
         res.status(500).json({
             success: false,
             message: "Server error",
+        });
+    }
+};
+const googleLogin = async (req, res) => {
+    const idToken = String(req.body?.idToken || "").trim();
+
+    if (!idToken) {
+        return res.status(400).json({
+            success: false,
+            message: "Please provide a Google credential.",
+        });
+    }
+
+    if (!process.env.GOOGLE_CLIENT_ID?.trim()) {
+        return res.status(503).json({
+            success: false,
+            message: "Google Sign-In is not configured on this backend. Set GOOGLE_CLIENT_ID in backend/.env (or the backend host environment) and restart the backend.",
+        });
+    }
+
+    let claims;
+
+    try {
+        claims = await googleAuthService.verifyGoogleIdToken(idToken);
+    } catch (error) {
+        const networkFailure = [
+            "EAI_AGAIN",
+            "ECONNREFUSED",
+            "ECONNRESET",
+            "ENOTFOUND",
+            "ETIMEDOUT",
+        ].includes(error.code) || error.response?.status >= 500;
+
+        if (networkFailure) {
+            console.error("Google token verification service unavailable:", error.message);
+            return res.status(503).json({
+                success: false,
+                message: "Google Sign-In is temporarily unavailable. Please try again.",
+            });
+        }
+
+        return res.status(401).json({
+            success: false,
+            message: "Google credential could not be verified.",
+        });
+    }
+
+    const email = typeof claims?.email === "string"
+        ? claims.email.trim().toLowerCase()
+        : "";
+    const googleId = typeof claims?.sub === "string" ? claims.sub : "";
+    const name = typeof claims?.name === "string" && claims.name.trim()
+        ? claims.name.trim()
+        : email.split("@")[0];
+
+    if (!googleId || !email.includes("@") || claims?.email_verified !== true) {
+        return res.status(401).json({
+            success: false,
+            message: "Google account must have a verified email address.",
+        });
+    }
+
+    try {
+        let user = await User.findOne({ googleId });
+
+        if (!user) {
+            user = await User.findOne({ email });
+
+            if (user?.googleId && user.googleId !== googleId) {
+                return res.status(409).json({
+                    success: false,
+                    message: "This email is linked to a different Google account.",
+                });
+            }
+
+            if (user) {
+                user.googleId = googleId;
+                await user.save();
+            } else {
+                user = await User.create({
+                    name,
+                    email,
+                    googleId,
+                    profileImage: typeof claims?.picture === "string" &&
+                        claims.picture.startsWith("https://")
+                        ? claims.picture
+                        : "",
+                });
+            }
+        }
+
+        return sendGoogleLoginResponse(res, user);
+    } catch (error) {
+        if (error.code === 11000) {
+            try {
+                let user = await User.findOne({ googleId });
+
+                if (user) {
+                    return sendGoogleLoginResponse(res, user);
+                }
+
+                user = await User.findOne({ email });
+
+                if (user?.googleId && user.googleId !== googleId) {
+                    return res.status(409).json({
+                        success: false,
+                        message: "This email is linked to a different Google account.",
+                    });
+                }
+
+                if (user) {
+                    user.googleId = googleId;
+                    await user.save();
+                    return sendGoogleLoginResponse(res, user);
+                }
+            } catch (lookupError) {
+                console.error("Google login account lookup error:", lookupError.message);
+            }
+        }
+
+        console.error("Google login error:", error.message);
+        return res.status(500).json({
+            success: false,
+            message: "Unable to complete Google login.",
         });
     }
 };
@@ -402,6 +547,7 @@ const verifyOtpLogin = async (req, res) => {
 module.exports = {
     registerUser,
     loginUser,
+    googleLogin,
     getMe,
     requestOtpLogin,
     verifyOtpLogin,

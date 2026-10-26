@@ -5,6 +5,9 @@ const Feedback = require("../models/Feedback");
 const Destination = require("../models/Destination");
 const TripItinerary = require("../models/TripItinerary");
 const TripExpense = require("../models/TripExpense");
+const mongoose = require("mongoose");
+const { getPaymentAdminData } = require("./paymentController");
+const { validateDestinationPayload } = require("../services/destinationValidation");
 
 const sendUpdateError = (res, error, message) => {
     console.error(`${message} error:`, error.message);
@@ -31,14 +34,15 @@ const sendUpdateError = (res, error, message) => {
 
 const getAdminDashboard = async (req, res) => {
     try {
-        const [users, trips, queries, feedback, destinations, itineraries, expenses] = await Promise.all([
-            User.find().select("-password").sort({ createdAt: -1 }),
+        const [users, trips, queries, feedback, destinations, itineraries, expenses, paymentData] = await Promise.all([
+            User.find().select("-password -processedPaymentIds").sort({ createdAt: -1 }),
             Trip.find().populate("user", "name email").sort({ createdAt: -1 }),
             ContactQuery.find().sort({ createdAt: -1 }),
             Feedback.find().populate("trip", "destination").sort({ createdAt: -1 }),
-            Destination.find().sort({ name: 1 }),
+            Destination.find().select("-images.data").sort({ name: 1 }),
             TripItinerary.find().populate("trip", "destination startDate endDate currency").sort({ trip: 1, day: 1 }),
             TripExpense.find().populate("trip", "destination currency").sort({ date: -1 }),
+            getPaymentAdminData(),
         ]);
 
         const averageRating = feedback.length
@@ -67,11 +71,16 @@ const getAdminDashboard = async (req, res) => {
             destinations,
             itineraries,
             expenses,
+            packages: paymentData.packages,
+            payments: paymentData.payments,
             stats: {
                 totalUsers: users.length,
                 tripCount: trips.length,
                 averageRating,
                 budgetSummary: Array.from(budgetSummary.values()),
+                revenuePaise: paymentData.revenuePaise,
+                paidPaymentCount: paymentData.paidPaymentCount,
+                totalTripCredits: users.reduce((sum, user) => sum + (Number(user.tripCredits) || 0), 0),
             },
         });
     } catch (error) {
@@ -365,14 +374,9 @@ const deleteContactQuery = async (req, res) => {
 
 const createDestination = async (req, res) => {
     try {
-        const { name, country, region, description, imageUrl, currency, active } = req.body;
-        if (typeof name !== "string" || !name.trim() || name.trim().length > 120) {
-            return res.status(400).json({ success: false, message: "A valid destination name is required" });
-        }
-        if (imageUrl !== undefined && !isValidImageUrl(imageUrl)) {
-            return res.status(400).json({ success: false, message: "Image URL must be a valid HTTP or HTTPS URL" });
-        }
-        const destination = await Destination.create({ name: name.trim(), country, region, description, imageUrl, currency, active });
+        const { data, error } = validateDestinationPayload(req.body);
+        if (error) return res.status(400).json({ success: false, message: error });
+        const destination = await Destination.create(data);
         res.status(201).json({ success: true, destination });
     } catch (error) {
         sendUpdateError(res, error, "Create destination");
@@ -383,29 +387,26 @@ const updateDestination = async (req, res) => {
     try {
         const destination = await Destination.findById(req.params.id);
         if (!destination) return res.status(404).json({ success: false, message: "Destination not found" });
-        const fields = ["name", "country", "region", "description", "imageUrl", "currency", "active"];
-        const supplied = fields.filter((field) => req.body[field] !== undefined);
-        if (!supplied.length) return res.status(400).json({ success: false, message: "At least one destination field is required" });
-        if (req.body.imageUrl !== undefined && !isValidImageUrl(req.body.imageUrl)) {
-            return res.status(400).json({ success: false, message: "Image URL must be a valid HTTP or HTTPS URL" });
+        const { data, error } = validateDestinationPayload(req.body, true);
+        if (error) return res.status(400).json({ success: false, message: error });
+        if (!Object.keys(data).length) {
+            return res.status(400).json({ success: false, message: "At least one destination field is required." });
         }
-        supplied.forEach((field) => { destination[field] = req.body[field]; });
+        Object.entries(data).forEach(([field, value]) => {
+            if (field === "bookingDetails") {
+                destination.bookingDetails = {
+                    ...destination.bookingDetails?.toObject?.(),
+                    ...destination.bookingDetails,
+                    ...value,
+                };
+            } else {
+                destination[field] = value;
+            }
+        });
         await destination.save();
         res.json({ success: true, destination });
     } catch (error) {
         sendUpdateError(res, error, "Update destination");
-    }
-};
-
-const isValidImageUrl = (value) => {
-    if (typeof value !== "string" || value.length > 2048) return false;
-    if (!value.trim()) return true;
-
-    try {
-        const url = new URL(value.trim());
-        return url.protocol === "http:" || url.protocol === "https:";
-    } catch {
-        return false;
     }
 };
 
@@ -416,6 +417,87 @@ const deleteDestination = async (req, res) => {
         res.json({ success: true, message: "Destination deleted successfully" });
     } catch (error) {
         sendUpdateError(res, error, "Delete destination");
+    }
+};
+
+const uploadDestinationImages = async (req, res) => {
+    try {
+        if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+            return res.status(400).json({ success: false, message: "Destination identifier is invalid." });
+        }
+        if (!Array.isArray(req.files) || req.files.length === 0) {
+            return res.status(400).json({ success: false, message: "Select at least one JPG, PNG, or WebP image." });
+        }
+        const destination = await Destination.findById(req.params.id);
+        if (!destination) {
+            return res.status(404).json({ success: false, message: "Destination not found." });
+        }
+        if (destination.images.length + req.files.length > 10) {
+            return res.status(400).json({ success: false, message: "A destination can have at most 10 uploaded images." });
+        }
+
+        const uploads = req.files.map((file) => {
+            const bytes = file.buffer;
+            const isPng = bytes.length >= 8 &&
+                bytes.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]));
+            const isJpeg = bytes.length >= 3 &&
+                bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff;
+            const isWebp = bytes.length >= 12 &&
+                bytes.toString("ascii", 0, 4) === "RIFF" &&
+                bytes.toString("ascii", 8, 12) === "WEBP";
+            const contentType = isPng ? "image/png" : isJpeg ? "image/jpeg" : isWebp ? "image/webp" : "";
+
+            if (!contentType || contentType !== file.mimetype) {
+                throw Object.assign(new Error("Uploaded image content does not match a supported JPG, PNG, or WebP file."), {
+                    statusCode: 400,
+                });
+            }
+
+            return {
+                filename: file.originalname.slice(0, 255),
+                contentType,
+                data: bytes,
+            };
+        });
+
+        destination.images.push(...uploads);
+        await destination.save();
+        return res.status(201).json({
+            success: true,
+            images: destination.images.map((image) => ({
+                _id: image._id,
+                filename: image.filename,
+                contentType: image.contentType,
+                url: `/api/destinations/${destination._id}/images/${image._id}`,
+            })),
+        });
+    } catch (error) {
+        if (error.statusCode) {
+            return res.status(error.statusCode).json({ success: false, message: error.message });
+        }
+        return sendUpdateError(res, error, "Upload destination images");
+    }
+};
+
+const deleteDestinationImage = async (req, res) => {
+    try {
+        if (!mongoose.Types.ObjectId.isValid(req.params.id) ||
+            !mongoose.Types.ObjectId.isValid(req.params.imageId)) {
+            return res.status(400).json({ success: false, message: "Destination or image identifier is invalid." });
+        }
+        const destination = await Destination.findById(req.params.id);
+        if (!destination) {
+            return res.status(404).json({ success: false, message: "Destination not found." });
+        }
+        const image = destination.images.id(req.params.imageId);
+        if (!image) {
+            return res.status(404).json({ success: false, message: "Destination image not found." });
+        }
+        image.deleteOne();
+        await destination.save();
+        return res.json({ success: true, message: "Destination image removed." });
+    } catch (error) {
+        return sendUpdateError(res, error, "Delete destination image");
     }
 };
 
@@ -559,6 +641,8 @@ module.exports = {
     createDestination,
     updateDestination,
     deleteDestination,
+    uploadDestinationImages,
+    deleteDestinationImage,
     createFeedback,
     updateFeedback,
     deleteFeedback,
