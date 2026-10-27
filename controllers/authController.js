@@ -12,12 +12,38 @@ const MAX_OTP_ATTEMPTS = 5;
 const generateOtp = () => String(crypto.randomInt(100000, 1000000));
 const jwtSecret = process.env.JWT_SECRET || "tripai-dev-secret-key";
 
+const getEmailFailureCategory = (error) => {
+    if (error.code === "EMAIL_CONFIG_MISSING") return "configuration";
+    if (error.code === "EAUTH") return "authentication";
+    if (error.code === "EMAIL_RECIPIENT_REJECTED") return "rejected";
+    if (["EDNS", "EAI_AGAIN", "ENOTFOUND"].includes(error.code)) return "dns";
+    if (["ECONNECTION", "ECONNREFUSED", "ECONNRESET", "ETIMEDOUT"].includes(error.code)) {
+        return "network";
+    }
+    if (Number(error.responseCode) >= 500) return "provider";
+    if (Number(error.responseCode) >= 400) return "rejected";
+    return "unknown";
+};
+
+const logOtpEmailFailure = (error) => {
+    console.error("OTP email delivery failed:", JSON.stringify({
+        category: getEmailFailureCategory(error),
+        code: typeof error.code === "string" ? error.code : "UNKNOWN",
+        responseCode: Number.isFinite(Number(error.responseCode))
+            ? Number(error.responseCode)
+            : undefined,
+        command: typeof error.command === "string" ? error.command : undefined,
+    }));
+};
+
 const createEmailTransporter = () => {
     const emailUser = process.env.EMAIL_USER;
     const emailPass = process.env.EMAIL_PASS;
 
     if (!emailUser || !emailPass) {
-        return null;
+        const error = new Error("Email service credentials are not configured.");
+        error.code = "EMAIL_CONFIG_MISSING";
+        throw error;
     }
 
     return nodemailer.createTransport({
@@ -33,10 +59,6 @@ const createEmailTransporter = () => {
 
 const sendOtpEmail = async (toEmail, otp) => {
     const transporter = createEmailTransporter();
-
-    if (!transporter) {
-        throw new Error("Email service is not configured. Set EMAIL_USER and EMAIL_PASS in the backend environment.");
-    }
 
     const fromAddress = process.env.EMAIL_FROM || process.env.EMAIL_USER;
 
@@ -55,7 +77,9 @@ const sendOtpEmail = async (toEmail, otp) => {
     });
 
     if (delivery.rejected.includes(toEmail) || delivery.accepted.length === 0) {
-        throw new Error("SMTP server did not accept the OTP recipient.");
+        const error = new Error("SMTP server did not accept the OTP recipient.");
+        error.code = "EMAIL_RECIPIENT_REJECTED";
+        throw error;
     }
 };
 
@@ -408,17 +432,10 @@ const requestOtpLogin = async (req, res) => {
         try {
             await sendOtpEmail(email, otp);
         } catch (emailError) {
-            console.error(
-                "OTP email send failed:",
-                JSON.stringify({
-                    code: emailError.code,
-                    responseCode: emailError.responseCode,
-                    command: emailError.command,
-                })
-            );
+            logOtpEmailFailure(emailError);
             const message = emailError.code === "EAUTH"
                 ? "The email provider rejected the sender credentials. For Gmail, use a valid App Password in EMAIL_PASS, with EMAIL_USER set to the same Gmail account. Restart the backend after updating backend/.env."
-                : "We couldn't send the OTP email. Check the email service configuration and try again.";
+                : "We couldn't send the OTP email. Check the backend email configuration and provider logs, then try again.";
 
             return res.status(503).json({
                 success: false,
@@ -437,7 +454,10 @@ const requestOtpLogin = async (req, res) => {
             message: "OTP has been sent to your email address.",
         });
     } catch (error) {
-        console.error("Request OTP error:", error.message);
+        console.error("Request OTP failed:", JSON.stringify({
+            name: typeof error.name === "string" ? error.name : "Error",
+            code: typeof error.code === "string" ? error.code : "UNKNOWN",
+        }));
         res.status(500).json({
             success: false,
             message: "Unable to send OTP right now.",
