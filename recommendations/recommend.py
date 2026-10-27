@@ -1,7 +1,6 @@
 import json
 import sys
 from pathlib import Path
-scikit-learn
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
