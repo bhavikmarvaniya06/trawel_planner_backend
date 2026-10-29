@@ -32,7 +32,6 @@ const logOtpEmailFailure = (error) => {
         responseCode: Number.isFinite(Number(error.responseCode))
             ? Number(error.responseCode)
             : undefined,
-        command: typeof error.command === "string" ? error.command : undefined,
     }));
 };
 
@@ -46,10 +45,16 @@ const createEmailTransporter = () => {
         throw error;
     }
 
+    const port = Number(process.env.EMAIL_PORT) || 465;
+    const secureSetting = process.env.EMAIL_SECURE;
+    const secure = secureSetting === undefined || secureSetting.trim() === ""
+        ? port === 465
+        : ["true", "1", "yes"].includes(secureSetting.trim().toLowerCase());
+
     return nodemailer.createTransport({
         host: process.env.EMAIL_HOST || "smtp.gmail.com",
-        port: Number(process.env.EMAIL_PORT) || 587,
-        secure: String(process.env.EMAIL_SECURE || "false") === "true",
+        port,
+        secure,
         auth: {
             user: emailUser,
             pass: emailPass.replace(/\s+/g, ""),
@@ -61,6 +66,8 @@ const sendOtpEmail = async (toEmail, otp) => {
     const transporter = createEmailTransporter();
 
     const fromAddress = process.env.EMAIL_FROM || process.env.EMAIL_USER;
+
+    await transporter.verify();
 
     const delivery = await transporter.sendMail({
         from: fromAddress,
@@ -76,11 +83,27 @@ const sendOtpEmail = async (toEmail, otp) => {
         `,
     });
 
-    if (delivery.rejected.includes(toEmail) || delivery.accepted.length === 0) {
+    if (delivery.rejected?.includes(toEmail) || !delivery.accepted?.length) {
         const error = new Error("SMTP server did not accept the OTP recipient.");
         error.code = "EMAIL_RECIPIENT_REJECTED";
         throw error;
     }
+};
+
+const getOtpEmailErrorMessage = (error) => {
+    if (error.code === "EMAIL_CONFIG_MISSING") {
+        return "Backend email configuration is incomplete. Set EMAIL_USER and EMAIL_PASS in Render, then restart or redeploy the service.";
+    }
+
+    if (error.code === "EAUTH") {
+        return "The email provider rejected the sender credentials. For Gmail, use a valid App Password in EMAIL_PASS and set EMAIL_USER to the same Gmail account.";
+    }
+
+    if (["EDNS", "EAI_AGAIN", "ENOTFOUND", "ECONNECTION", "ECONNREFUSED", "ECONNRESET", "ETIMEDOUT"].includes(error.code)) {
+        return "The email provider could not be reached. Check EMAIL_HOST, EMAIL_PORT, and EMAIL_SECURE in Render, then try again.";
+    }
+
+    return "We couldn't send the OTP email. Check the backend email configuration and provider logs, then try again.";
 };
 
 const sendGoogleLoginResponse = (res, user) => {
@@ -433,13 +456,10 @@ const requestOtpLogin = async (req, res) => {
             await sendOtpEmail(email, otp);
         } catch (emailError) {
             logOtpEmailFailure(emailError);
-            const message = emailError.code === "EAUTH"
-                ? "The email provider rejected the sender credentials. For Gmail, use a valid App Password in EMAIL_PASS, with EMAIL_USER set to the same Gmail account. Restart the backend after updating backend/.env."
-                : "We couldn't send the OTP email. Check the backend email configuration and provider logs, then try again.";
 
             return res.status(503).json({
                 success: false,
-                message,
+                message: getOtpEmailErrorMessage(emailError),
             });
         }
 
