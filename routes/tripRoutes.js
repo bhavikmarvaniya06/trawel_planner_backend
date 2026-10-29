@@ -5,7 +5,6 @@ const {
     getTripSuggestions,
     getOptimizedRoute,
     createTrip,
-    emailTripPdf,
     getMyTrips,
     getTripById,
     getTripWeather,
@@ -38,7 +37,6 @@ router.param("id", (req, res, next, id) => {
 router.post("/suggestions", protect, getTripSuggestions);
 router.post("/optimize-route", protect, getOptimizedRoute);
 router.post("/", protect, createTrip);
-router.post("/:id/email", protect, emailTripPdf);
 
 
 // Get my trips

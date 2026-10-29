@@ -5,8 +5,6 @@ const {
     loginUser,
     googleLogin,
     getMe,
-    requestOtpLogin,
-    verifyOtpLogin,
 } = require("../controllers/authController");
 
 const protect = require("../middleware/authMiddleware");
@@ -19,8 +17,6 @@ router.post("/register", registerUser);
 
 router.post("/login", loginUser);
 router.post("/google", googleLogin);
-router.post("/request-otp", requestOtpLogin);
-router.post("/verify-otp", verifyOtpLogin);
 
 
 // Protected route

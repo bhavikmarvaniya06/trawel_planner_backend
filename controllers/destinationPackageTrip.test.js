@@ -3,20 +3,16 @@ const { afterEach, test } = require("node:test");
 const Destination = require("../models/Destination");
 const Trip = require("../models/Trip");
 const TripItinerary = require("../models/TripItinerary");
-const User = require("../models/User");
 const paymentService = require("../services/paymentService");
 const itineraryService = require("../services/itineraryService");
-const tripEmailService = require("../services/tripEmailService");
 
 const originals = {
     destinationFindOne: Destination.findOne,
     tripCreate: Trip.create,
     itineraryInsertMany: TripItinerary.insertMany,
-    userFindById: User.findById,
     getTripAvailability: paymentService.getTripAvailability,
     consumeTripCredit: paymentService.consumeTripCredit,
     generateItinerary: itineraryService.generateItinerary,
-    sendTripConfirmationEmail: tripEmailService.sendTripConfirmationEmail,
 };
 
 const createTripController = () => {
@@ -41,11 +37,9 @@ afterEach(() => {
     Destination.findOne = originals.destinationFindOne;
     Trip.create = originals.tripCreate;
     TripItinerary.insertMany = originals.itineraryInsertMany;
-    User.findById = originals.userFindById;
     paymentService.getTripAvailability = originals.getTripAvailability;
     paymentService.consumeTripCredit = originals.consumeTripCredit;
     itineraryService.generateItinerary = originals.generateItinerary;
-    tripEmailService.sendTripConfirmationEmail = originals.sendTripConfirmationEmail;
     delete require.cache[require.resolve("./tripController")];
 });
 
@@ -87,10 +81,6 @@ test("package selection saves a priced trip using existing credit rules and cura
     TripItinerary.insertMany = async (entries) => {
         savedItinerary = entries;
     };
-    User.findById = () => ({
-        select: async () => ({ name: "Traveler", email: "traveler@example.com" }),
-    });
-    tripEmailService.sendTripConfirmationEmail = async () => {};
 
     const { createTrip } = createTripController();
     const response = makeResponse();
@@ -118,6 +108,7 @@ test("package selection saves a priced trip using existing credit rules and cura
     assert.equal(savedItinerary[0].title, "Arrival");
     assert.equal(creditConsumed, true);
     assert.equal(response.body.trip._id, tripId);
+    assert.equal("emailMessage" in response.body, false);
 });
 
 test("package booking rejects unpublished or unavailable destinations", async () => {
