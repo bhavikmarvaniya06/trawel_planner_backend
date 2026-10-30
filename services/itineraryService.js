@@ -141,6 +141,42 @@ const getCuratedGoaSuggestions = ({ destination, interests, travelStyle, require
         }));
 };
 
+const curatedBaliPlaces = [
+    { name: "Ubud Monkey Forest", category: "Nature & culture", interests: ["nature", "history", "culture", "family"], description: "A forest sanctuary in Ubud with temple architecture and long-tailed macaques; follow local visitor guidance and keep food secured." },
+    { name: "Tegallalang Rice Terraces", category: "Nature & culture", interests: ["nature", "photography", "culture"], description: "A scenic landscape of terraced rice fields north of Ubud, with walking paths and small local cafes." },
+    { name: "Tanah Lot Temple", category: "History & coast", interests: ["history", "culture", "beaches", "photography"], description: "A sea temple on Bali's southwest coast, especially known for its ocean views around sunset; check tide and access conditions before visiting." },
+    { name: "Uluwatu Temple", category: "History & coast", interests: ["history", "culture", "beaches", "photography"], description: "A clifftop temple on Bali's Bukit Peninsula with wide Indian Ocean views; observe temple dress and visitor rules." },
+    { name: "Sanur Beach", category: "Beach & nature", interests: ["beaches", "relaxing", "family", "nature"], description: "A calm coastal area on Bali's southeast side, known for its beachfront path and sunrise views." },
+    { name: "Mount Batur", category: "Nature & adventure", interests: ["nature", "adventure", "hiking", "photography"], description: "An active volcano in the Kintamani highlands with guided hiking options; check current access and safety advice before planning a climb." },
+];
+
+const getCuratedBaliSuggestions = ({ destination, interests, travelStyle, requireMatch = false }) => {
+    if (!/\bbali\b/i.test(destination)) {
+        return [];
+    }
+
+    const preferred = new Set(interests.map((interest) => interest.toLowerCase()));
+    return curatedBaliPlaces
+        .map((place, index) => ({
+            place,
+            index,
+            score: place.interests.filter((interest) => preferred.has(interest) || interest === travelStyle).length,
+        }))
+        .sort((left, right) => right.score - left.score || left.index - right.index)
+        .filter(({ score }) => !requireMatch || score > 0)
+        .slice(0, 5)
+        .map(({ place }) => ({
+            name: place.name,
+            category: place.category,
+            description: place.description,
+            mapsUrl: getMapsUrl(`${place.name}, Bali`),
+            url: `https://en.wikivoyage.org/wiki/${encodeURIComponent(place.name.replace(/ /g, "_"))}`,
+        }));
+};
+
+const getCuratedDestinationSuggestions = (options) =>
+    getCuratedGoaSuggestions(options).concat(getCuratedBaliSuggestions(options)).slice(0, 5);
+
 const generateTripSuggestions = async ({
     destination,
     days,
@@ -199,7 +235,7 @@ const generateTripSuggestions = async ({
         }
     }
 
-    const curatedMatches = getCuratedGoaSuggestions({
+    const curatedMatches = getCuratedDestinationSuggestions({
         destination,
         interests: normalizedInterests,
         travelStyle,
@@ -286,7 +322,7 @@ const generateTripSuggestions = async ({
             }
         }
     } catch {
-        const curatedSuggestions = getCuratedGoaSuggestions({ destination, interests: normalizedInterests, travelStyle });
+        const curatedSuggestions = getCuratedDestinationSuggestions({ destination, interests: normalizedInterests, travelStyle });
         if (curatedSuggestions.length > 0) {
             return cacheValue(curatedSuggestions, "curated");
         }
@@ -330,7 +366,7 @@ const generateTripSuggestions = async ({
         .map(({ suggestion }) => suggestion);
 
     if (suggestions.length === 0) {
-        const curatedSuggestions = getCuratedGoaSuggestions({ destination, interests: normalizedInterests, travelStyle });
+        const curatedSuggestions = getCuratedDestinationSuggestions({ destination, interests: normalizedInterests, travelStyle });
         if (curatedSuggestions.length > 0) {
             return cacheValue(curatedSuggestions, "curated");
         }
